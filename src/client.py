@@ -28,14 +28,14 @@ def receive_messages(client_socket, key):
         try:
             message = client_socket.recv(1024)
             if not message:
-                break
+                print("\n[System] Server closed the connection.")
+                os._exit(0)
             
             decrypted_message = decrypt_message(message, key)
             print(f"\r[Partner]: {decrypted_message}\nYou: ", end="")
         except Exception:
             print("\n[System] Connection to server lost.")
-            client_socket.close()
-            break
+            os._exit(0)
 
 def start_client():
     """Initializes the secure client connection and I/O threads."""
@@ -60,17 +60,22 @@ def start_client():
     receive_thread.start()
     print("Type your messages below. Type 'exit' to quit.")
     
-    #main loop
-    while True:
-        message = input("You: ")
-        if message.lower() == 'exit':
-            break
-        try:
+    try:
+        #main loop
+        while True:
+            message = input("You: ")
+            if message.lower() == 'exit':
+                break
+            
             encrypted_msg = encrypt_message(message, key)
             client_socket.send(encrypted_msg)
-        except Exception:
-            break
-    client_socket.close()
+    except KeyboardInterrupt:
+        pass
+    except Exception:
+        print(f"\n error: {e}")
+    finally:
+        client_socket.close()
+        os._exit(0)
 
 if __name__ == "__main__":
     start_client()

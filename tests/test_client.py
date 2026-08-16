@@ -15,5 +15,6 @@ def test_load_key_fails_without_env_var(monkeypatch):
     monkeypatch.delenv("SHARED_KEY", raising=False)
     
     #must crash with value error if no key
-    with pytest.raises(ValueError, match="SHARED_KEY environment variable not set"):
-        load_key()
+    with patch('src.client.load_dotenv'):
+        with pytest.raises(ValueError, match="SHARED_KEY environment variable not set"):
+            load_key()
