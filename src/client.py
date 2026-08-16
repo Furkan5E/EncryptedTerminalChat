@@ -32,7 +32,7 @@ def receive_messages(client_socket, key):
                 os._exit(0)
             
             decrypted_message = decrypt_message(message, key)
-            print(f"\r[Partner]: {decrypted_message}\nYou: ", end="")
+            print(f"\r{decrypted_message}\nYou: ", end="")
         except Exception:
             print("\n[System] Connection to server lost.")
             os._exit(0)
@@ -55,6 +55,10 @@ def start_client():
         print(f"Failed to connect: {e}")
         sys.exit(1)
 
+    username = input("Enter your username: ").strip()
+    if not username:
+        username = "Anonymous"
+
     #start receiving process in background thread
     receive_thread = threading.Thread(target=receive_messages, args=(client_socket, key), daemon=True)
     receive_thread.start()
@@ -67,11 +71,12 @@ def start_client():
             if message.lower() == 'exit':
                 break
             
-            encrypted_msg = encrypt_message(message, key)
+            full_message = f"[{username}]: {message}"
+            encrypted_msg = encrypt_message(full_message, key)
             client_socket.send(encrypted_msg)
     except KeyboardInterrupt:
         pass
-    except Exception:
+    except Exception as e:
         print(f"\n error: {e}")
     finally:
         client_socket.close()
