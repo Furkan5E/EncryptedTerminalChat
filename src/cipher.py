@@ -1,5 +1,6 @@
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 
 def generate_key() -> bytes:
     """Generates a secure 32-byte symmetric Fernet key."""
@@ -23,3 +24,14 @@ def generate_rsa_keypair():
     )
     public_key = private_key.public_key()
     return private_key, public_key
+
+def serialise_public_key(public_key) -> bytes:
+    """Converts an RSA public key object into transmitable PEM bytes."""
+    return public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+def deserialise_public_key(pem_bytes: bytes):
+    """Converts received PEM bytes back into an RSA public key object."""
+    return serialization.load_pem_public_key(pem_bytes)

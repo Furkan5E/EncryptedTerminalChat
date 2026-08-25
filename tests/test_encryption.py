@@ -1,7 +1,7 @@
 import pytest
 from cryptography.fernet import InvalidToken
 from cryptography.hazmat.primitives.asymmetric import rsa
-from src.cipher import encrypt_message, decrypt_message, generate_key, generate_rsa_keypair
+from src.cipher import encrypt_message, decrypt_message, generate_key, generate_rsa_keypair, serialise_public_key, deserialise_public_key
 
 def test_encryption_decryption():
     key = generate_key()
@@ -34,3 +34,15 @@ def test_generate_rsa_keypair_creates_valid_keys():
     
     #ensure key size is 2048 bits
     assert private_key.key_size == 2048
+
+def test_public_key_serialization():
+    _, public_key = generate_rsa_keypair()
+    
+    #serialise to bytes
+    pem_bytes = serialise_public_key(public_key)
+    assert isinstance(pem_bytes, bytes)
+    assert b"-----BEGIN PUBLIC KEY-----" in pem_bytes
+    
+    #seserialise back to an object
+    reconstructed_key = deserialise_public_key(pem_bytes)
+    assert isinstance(reconstructed_key, rsa.RSAPublicKey)
