@@ -1,7 +1,7 @@
 import pytest
 from cryptography.fernet import InvalidToken
 from cryptography.hazmat.primitives.asymmetric import rsa
-from src.cipher import encrypt_message, decrypt_message, generate_key, generate_rsa_keypair, serialise_public_key, deserialise_public_key
+from src.cipher import encrypt_message, decrypt_message, generate_key, generate_rsa_keypair, serialise_public_key, deserialise_public_key, wrap_symmetric_key, unwrap_symmetric_key
 
 def test_encryption_decryption():
     key = generate_key()
@@ -46,3 +46,14 @@ def test_public_key_serialization():
     #seserialise back to an object
     reconstructed_key = deserialise_public_key(pem_bytes)
     assert isinstance(reconstructed_key, rsa.RSAPublicKey)
+
+def test_rsa_key_wrapping():
+    private_key, public_key = generate_rsa_keypair()
+    fernet_key = generate_key()
+    
+    wrapped_key = wrap_symmetric_key(fernet_key, public_key)
+    assert wrapped_key != fernet_key
+    assert isinstance(wrapped_key, bytes)
+    
+    unwrapped_key = unwrap_symmetric_key(wrapped_key, private_key)
+    assert unwrapped_key == fernet_key

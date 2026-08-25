@@ -1,6 +1,6 @@
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
 
 def generate_key() -> bytes:
     """Generates a secure 32-byte symmetric Fernet key."""
@@ -35,3 +35,25 @@ def serialise_public_key(public_key) -> bytes:
 def deserialise_public_key(pem_bytes: bytes):
     """Converts received PEM bytes back into an RSA public key object."""
     return serialization.load_pem_public_key(pem_bytes)
+
+def wrap_symmetric_key(fernet_key: bytes, public_key) -> bytes:
+    """Encrypts the symmetric Fernet key using the RSA public key."""
+    return public_key.encrypt(
+        fernet_key,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+
+def unwrap_symmetric_key(wrapped_key: bytes, private_key) -> bytes:
+    """Decrypts the wrapped symmetric key using the private RSA key."""
+    return private_key.decrypt(
+        wrapped_key,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
