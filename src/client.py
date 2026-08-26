@@ -62,7 +62,7 @@ def receive_messages(client_socket, key):
                 os._exit(0)
             
             decrypted_message = decrypt_message(message, key)
-            print(f"\r{decrypted_message}\nYou: ", end="")
+            print(f"\r\033[2K{decrypted_message}\nYou: ", end="", flush=True)
         except Exception:
             print("\n[System] Connection to server lost.")
             os._exit(0)
