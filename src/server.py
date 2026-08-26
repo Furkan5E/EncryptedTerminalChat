@@ -1,59 +1,61 @@
 import socket
 import threading
+import os
 
-active_clients = [] #list of active client sockets
+clients = [] #list of active client sockets
+ready_event = threading.Event()
 
-def broadcast(message, sender_socket, clients_list):
-    """Sends a raw byte message to all connected clients except the sender."""
-    for client in clients_list:
-        if client != sender_socket:
-            try:
-                client.send(message)
-            except Exception:
-                #if sending fails assume client disconnected
-                pass
-
-def handle_client(client_socket):
-    """Listens for incoming messages from a specific client and broadcasts them."""
+def handle_client(client_socket, address):
+    """Blocks until both clients are present, then routes incoming traffic."""
+    ready_event.wait()
+    
     while True:
         try:
             #receive encrypted bytes
             message = client_socket.recv(1024)
             if not message:
                 break
-            broadcast(message, client_socket, active_clients)
+            
+            for client in clients:
+                if client != client_socket:
+                    client.send(message)
         except Exception:
             break
-            
-    #clean up on disconnect
-    if client_socket in active_clients:
-        active_clients.remove(client_socket)
+    #clean up on disconnect  
+    print(f"\nConnection lost with {address}. Shutting down session.")
     client_socket.close()
+    os._exit(0)
 
-def start_server(host='localhost', port=8080):
-    """Initialises the TCP server and accepts incoming connections."""
+def start_server(host="localhost", port=8080):
+    """Initialises the server and waits for exactly two connections."""
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((host, port))
-    server.listen()
+    server.listen(2)
+    
     print(f"Secure Chat Server listening on {host}:{port}...")
-
-    while True:
-        try:
+    print("Waiting for exactly two clients to connect before routing traffic...")
+    
+    try:
+        while len(clients) < 2:
             client_socket, address = server.accept()
             print(f"Connected with {address}")
-            
-            active_clients.append(client_socket)
-            
+            clients.append(client_socket)
             #new thread for new client
-            thread = threading.Thread(target=handle_client, args=(client_socket,))
+            thread = threading.Thread(target=handle_client, args=(client_socket, address), daemon=True)
             thread.start()
-        except KeyboardInterrupt:
-            print("\nServer shutting down.")
-            break
-        except Exception as e:
-            print(f"Error accepting connection: {e}")
             
-    server.close()
+        print("Both clients connected. Unlocking network routing.")
+        ready_event.set()
+        
+        while True:
+            pass
+            
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.close()
+        os._exit(0)
 
 if __name__ == "__main__":
     start_server()
