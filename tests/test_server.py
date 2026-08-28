@@ -1,19 +1,27 @@
 import pytest
-from unittest.mock import MagicMock
-from src.server import broadcast
+from unittest.mock import MagicMock, patch
+from src.server import handle_client, clients, ready_event
 
-def test_broadcast_sends_to_other_clients():
+def test_handle_client_routes_messages():
+    #reset global server state for test isolation
+    clients.clear()
+    ready_event.set()
+    
     #mock sockets
     sender = MagicMock()
     client2 = MagicMock()
     client3 = MagicMock()
     
     #simulate server's active connection pool
-    active_clients = [sender, client2, client3]
+    clients.extend([sender, client2, client3])
     message = b"encrypted_network_payload"
     
-    #execute broadcast function
-    broadcast(message, sender, active_clients)
+    #simulate sender sending a message then disconnecting
+    sender.recv.side_effect = [message, b""]
+    
+    #execute network routing handler safely
+    with patch("os._exit"):
+        handle_client(sender, ("127.0.0.1", 9999))
     
     #sender should not receive their own message back
     sender.send.assert_not_called()
