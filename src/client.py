@@ -3,11 +3,13 @@ import threading
 import argparse
 import os
 import sys
+import re
 from src.cipher import (
     encrypt_message, decrypt_message, generate_key,
     generate_rsa_keypair, serialise_public_key,
     deserialise_public_key, wrap_symmetric_key, unwrap_symmetric_key
 )
+ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 def parse_arguments():
     """Parses command line arguments for host, port, and handshake mode."""
@@ -68,6 +70,7 @@ def receive_messages(client_socket, key):
             while b"<END>" in buffer:
                 message_bytes, buffer = buffer.split(b"<END>", 1)
                 decrypted_message = decrypt_message(message_bytes, key)
+                decrypted_message = ANSI_ESCAPE.sub('', decrypted_message) #sanitise string
                 print(f"\r\033[2K{decrypted_message}\nYou: ", end="", flush=True)
                 
         except Exception as e:
