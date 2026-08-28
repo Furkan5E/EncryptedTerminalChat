@@ -53,18 +53,25 @@ def perform_handshake(client_socket, mode):
         return fernet_key
 
 def receive_messages(client_socket, key):
-    """Listens for incoming network payloads and decrypts them."""
+    """Listens for incoming network payloads, buffers them, and decrypts them."""
+    buffer = b""
     while True:
         try:
-            message = client_socket.recv(1024)
-            if not message:
+            chunk = client_socket.recv(1024)
+            if not chunk:
                 print("\n[System] Server closed the connection.")
                 os._exit(0)
             
-            decrypted_message = decrypt_message(message, key)
-            print(f"\r\033[2K{decrypted_message}\nYou: ", end="", flush=True)
-        except Exception:
-            print("\n[System] Connection to server lost.")
+            buffer += chunk
+            
+            #process messages in buffer
+            while b"<END>" in buffer:
+                message_bytes, buffer = buffer.split(b"<END>", 1)
+                decrypted_message = decrypt_message(message_bytes, key)
+                print(f"\r\033[2K{decrypted_message}\nYou: ", end="", flush=True)
+                
+        except Exception as e:
+            print(f"\n[System] Client error: {e}")
             os._exit(0)
 
 def start_client():
@@ -103,7 +110,9 @@ def start_client():
             
             full_message = f"{username}: {message}"
             encrypted_msg = encrypt_message(full_message, shared_key)
-            client_socket.send(encrypted_msg)
+
+            #append framing delimiter before sending tcp stream
+            client_socket.send(encrypted_msg + b"<END>")
     except KeyboardInterrupt:
         pass
     except Exception as e:
