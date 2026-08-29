@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+import argparse
 
 clients = [] #list of active client sockets
 ready_event = threading.Event()
@@ -58,4 +59,8 @@ def start_server(host="localhost", port=8080):
         os._exit(0)
 
 if __name__ == "__main__":
-    start_server()
+    parser = argparse.ArgumentParser(description="Encrypted Chat Relay Server")
+    parser.add_argument("--port", type=int, default=8080, help="Port to bind the server to")
+    args = parser.parse_args()
+    
+    start_server(host="0.0.0.0", port=args.port)
