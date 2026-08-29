@@ -1,4 +1,4 @@
-# EncryptedTerminalChat
+# Encrypted Terminal Chat
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![Build](https://img.shields.io/badge/Build-uv-purple.svg)
@@ -9,6 +9,7 @@ A secure, end-to-end encrypted terminal chat network featuring ephemeral keys an
 
 ## Architecture
 
+![Demo](docs/demo.gif)
 The application operates on a lightweight client-server model:
 
 | Component | Purpose |
@@ -19,7 +20,7 @@ The application operates on a lightweight client-server model:
 ## Key Features
 
 * **Server Blind Encryption:** Messages are encrypted locally, ensuring the relay server cannot intercept or store communication.
-* **Ephemeral Keys:** Cryptographic keys are generated per session to maintain strict security.
+* **Cryptographic Primitives:** Uses asymmetric key exchange for session negotiation and AES-GCM for secure message encryption.
 * **Terminal Injection Protection:** Input sanitisation prevents malicious escape sequences or shell commands from being injected into the recipient's terminal.
 * **Native Execution:** Runs directly on the host machine without Docker overhead to prevent TTY allocation friction and preserve raw terminal output.
 * **Deterministic Dependencies:** Cryptography modules and environments are completely isolated and locked using `pyproject.toml` and `uv.lock`.
@@ -34,15 +35,15 @@ uv sync
 ```
 Start the relay server: 
 ```bash
-uv run python src/server.py
+uv run python src/server.py --port 8080
 ```
 Launch the host client to open a room:
 ```bash
-uv run python src/client.py --mode host
+uv run python src/client.py --mode host --port 8080
 ```
-Launch the joining client in a separate terminal to connect to the host session at localhost:8080:
+Launch the joining client in a separate terminal:
 ```bash
-uv run python src/client.py --mode join
+uv run python src/client.py --mode join --port 8080
 ```
 ## Testing
 
