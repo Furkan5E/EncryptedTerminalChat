@@ -7,6 +7,8 @@
 
 A secure, end-to-end encrypted terminal chat network featuring ephemeral keys and robust message sanitisation. Built strictly with Python and managed via `uv` for seamless local execution.
 
+[![Download Latest Release](https://img.shields.io/github/v/release/Furkan5E/EncryptedTerminalChat?style=for-the-badge&label=DOWNLOAD%20.WHL&color=success)](https://github.com/Furkan5E/EncryptedTerminalChat/releases/latest)
+
 ## Architecture
 
 ![Demo](docs/demo.gif)
